@@ -1,0 +1,107 @@
+search filter and when it clicked on any search redirect to page:
+-----------------------------------------------------------------
+
+https://www.youtube.com/watch?v=s8_L3_GNvvs
+
+   <input type="search"  class="form-control" id="tags" placeholder="ابحث عن مدرسك المفضل">
+    <div id="options"></div>
+
+
+<script>
+    $( function() {
+        var objects;
+        /*start ajax call to get all teacher*/
+        $.ajax({
+            method: "GET",
+            url: "/allteacherssystem",
+            success: function(response) {
+                console.log(response);
+                objects = response;
+                },
+            error: function(error) {
+                console.error("Error fetching teachers:", error);
+            }
+        });
+        /*end ajax call to get all teacher*/
+
+
+        /*start function that filter according to input */
+        $("#tags").on('input', function() {
+
+            if (!objects) {
+                console.error("Teachers data not loaded yet.");
+                return;
+            } var inputValue = $(this).val().toLowerCase();
+            if (inputValue === '') {
+                $("#options").html(''); // Clear the options div when input is empty
+                return;
+            }
+            // Filter teachers based on input value
+            var filteredObjects = objects.filter(function (object) {
+                return object.full_name.toLowerCase().includes(inputValue);
+            });
+
+            // Update the options div
+            var ul = $("<ul class='list-group'>");
+
+            // Add <li> elements for each filtered object
+            $.each(filteredObjects, function (index, object) {
+                ul.append(`<li class="list-group-item " id="filteredobjects">
+                            <a style="cursor:pointer" data-id="${object.id}" data-type="${object.type}" class="list-group-item list-group-item-action">
+                                ${object.full_name}
+                            </a>
+                        </li>`);
+            });
+
+            // Update the options div with the <ul> containing <li> elements
+            $("#options").html(ul);
+
+        });
+        /*end function that filter according to input */
+
+        /*start function when click on filtered search with delegation*/
+        $("#options").on("click", "#filteredobjects a", function() {
+
+            if( $(this).data("type") === 'teacher'){
+                var url = "getteacher/" + $(this).data("id");
+            }
+            else{
+
+                var url = "courses/" + $(this).data("id");
+            }
+            console.log($(this).data("id"));
+            window.location.href = url;
+        });
+        /*end function when click on filtered search with delegation*/
+
+    });
+</script>
+
+
+    public function getobjectssystem()
+    {
+        $teachers = Teacher::where('status','1')->get();
+        $courses=Course::get();
+        $modifiedResponse = $teachers->map(function ($teacher) {
+            return [
+                'id' => $teacher->id,
+                'full_name' => $teacher->first_name . ' ' . $teacher->last_name,
+                'type' => 'teacher',
+            ];
+        });
+
+
+        $modifiedResponse = $modifiedResponse->merge(
+            $courses->map(function ($course) {
+                return [
+                    'id' => $course->id,
+                    'full_name' => $course->name,
+                    'type' => 'course',
+                ];
+            })
+        );
+        return $modifiedResponse;
+    }
+
+
+*******************************************************************************************************************************************************************************************
