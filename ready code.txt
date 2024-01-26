@@ -1,4 +1,4 @@
-search filter and when it clicked on any search redirect to page:
+a1: search filter and when it clicked on any search redirect to page:
 -----------------------------------------------------------------
 
 https://www.youtube.com/watch?v=s8_L3_GNvvs
@@ -101,6 +101,202 @@ https://www.youtube.com/watch?v=s8_L3_GNvvs
             })
         );
         return $modifiedResponse;
+    }
+
+
+*******************************************************************************************************************************************************************************************
+
+
+a2: to upload or drag&drop image in lararvel:
+-----------------------------------------
+
+
+
+@section('css')
+    <!---Internal Fileupload css-->
+    <link href="{{ URL::asset('assets/plugins/fileuploads/css/fileupload.css') }}" rel="stylesheet" type="text/css" />
+    <!---Internal Fancy uploader css-->
+    <link href="{{ URL::asset('assets/plugins/fancyuploder/fancy_fileupload.css') }}" rel="stylesheet" />
+<!--- Internal Select2 css-->
+<link href="{{URL::asset('assets/plugins/select2/css/select2.min.css')}}" rel="stylesheet">
+<!---Internal Fileupload css-->
+<link href="{{URL::asset('assets/plugins/fileuploads/css/fileupload.css')}}" rel="stylesheet" type="text/css"/>
+<!---Internal Fancy uploader css-->
+<link href="{{URL::asset('assets/plugins/fancyuploder/fancy_fileupload.css')}}" rel="stylesheet" />
+@endsection
+
+<input name="image"  type="file" class="dropify" data-default-file="{{ URL::asset('assets/img/photos/1.jpg') }}" data-height="108" />
+
+
+@section('js')
+<script src="{{URL::asset('assets/plugins/fileuploads/js/fileupload.js')}}"></script>
+<script src="{{URL::asset('assets/plugins/fileuploads/js/file-upload.js')}}"></script>
+<script src="{{URL::asset('assets/plugins/fancyuploder/jquery.ui.widget.js')}}"></script>
+<script src="{{URL::asset('assets/plugins/fancyuploder/jquery.fileupload.js')}}"></script>
+<script src="{{URL::asset('assets/plugins/fancyuploder/jquery.iframe-transport.js')}}"></script>
+<script src="{{URL::asset('assets/plugins/fancyuploder/jquery.fancy-fileupload.js')}}"></script>
+<script src="{{URL::asset('assets/plugins/fancyuploder/fancy-uploader.js')}}"></script>
+@endsection
+
+
+public function transefer_cash(Request $request){
+
+    $fileName = $request->from_number .  '-' . date('s') .  $request->image->getClientOriginalName();
+    $path = 'images/screentransfere';
+    $request->image->move($path, $fileName);
+}
+
+*******************************************************************************************************************************************************************************************
+
+
+a3: make ajax call for form with error handled at ajax for each input :
+-------------------------------------------------------------------
+            <div id="message" style="display:none" class="alert alert-success my-3 py-3 text-center">
+
+            </div>
+
+
+    <form id="transferCashForm"  enctype="multipart/form-data" class="my-5 p-3 border border-3">
+        @csrf
+        <div class="row">
+
+
+            <div class="col-md-6 form-group">
+                <label>الرقم اللى حولت منه* </label>
+                <input name="from_number"  value="{{old('from_number')}}" type="number" class="form-control @error('last_name') is-invalid @enderror @error('phone') is-invalid @enderror">
+
+            </div>
+
+            <div class="col-md-6 form-group">
+                <label> اختر الرقم اللى حولت ليه * </label>
+                <div class="mb-4">
+                    <select name="to_number" class="form-select" >
+                        <option value="" selected disabled> اختر الرقم </option>
+                            <option value="12345">12345</option>
+                            <option value="123456789"> 123456789</option>
+                            <option value="1234567891234"> 1234567891234</option>
+                    </select>
+                </div>
+
+            </div>
+
+
+
+            <div class="col-md-6 form-group ">
+                <label>مرفق صورة التحويل سكرين * </label>
+                <input name="image"  type="file" class="dropify"
+                     data-height="108" />
+
+            </div>
+
+            <div class="col-md-6 form-group">
+                <label>قيمة التحويل</label>
+                <input name="value"  value="{{old('value')}}" type="number" class="form-control @error('name_title') is-invalid @enderror @error('phone') is-invalid @enderror">
+
+            </div>
+
+        </div>
+
+        <button  id="submitBtn" class="btn btn-primary">Submit</button>
+    </form>
+
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+<script>
+
+    $(document).ready(function() {
+        $('#submitBtn').on('click', function(e) {
+            e.preventDefault(); // Prevent default form submission
+            // Disable the button to prevent multiple clicks
+            $(this).prop('disabled', true);
+
+            var formData = new FormData($('#transferCashForm')[0]);
+            $('#transferCashForm .form-control, #transferCashForm .form-select').removeClass('is-invalid');
+            $('#transferCashForm .alert-danger').remove();
+
+            $.ajax({
+                url: '{{ route('profile.transefer-cash') }}',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    $('#message')
+                        .css('display', 'block')
+                        .html(response.message);
+                        $('#transferCashForm')[0].reset();
+
+                },
+                error: function(xhr, status, error) {
+                    // Handle the error response
+                    if (xhr.status === 422) {
+                        // Handle validation errors
+                        var errors = xhr.responseJSON.error;
+                        $.each(errors, function(key, value) {
+                            var inputElement = $('[name="' + key + '"]');
+                            inputElement.addClass('is-invalid');
+                            inputElement.parent().append('<div class="alert alert-danger">' + value + '</div>');
+                        });
+                    } else {
+                        // Handle other errors
+                        var errorMessage = xhr.responseJSON.message || 'Something went wrong.';
+                        alert('Error: ' + errorMessage);
+                    }
+                },
+                complete: function() {
+                    // Enable the button after the request is complete
+                    $('#submitBtn').prop('disabled', false);
+                }
+            });
+        });
+    });
+</script>
+
+  public function transefer_cash(Request $request){
+        $studentId = Auth::guard('student')->user()->id;
+
+        $validator = Validator::make($request->all(), [
+            'from_number' => 'required|string|max:11|min:2',
+            'to_number' => 'required|string|max:11|min:2|in:12345,123456789,1234567891234',
+            'image' => 'required|image|mimes:jpg,png,jpeg|max:10240',
+            'value' => 'required|numeric',
+        ]);
+
+        if ($validator->fails()) {
+        return response()->json(['error' => $validator->errors()], 422);
+
+        }
+        try {
+            DB::beginTransaction();
+
+            // Store images
+            $fileName = $request->from_number . '-' . date('s') . $request->image->getClientOriginalName();
+            $path = 'images/screentransfere';
+            $request->image->move($path, $fileName);
+
+            // Create transaction record
+            $transaction = Transaction::create([
+                'student_id' => $studentId,
+                'money_value' => $request->value,
+            ]);
+
+            // Create transfere record
+            $transfere = TransfereCash::create([
+                "from_number" => $request->from_number,
+                "to_number" => $request->to_number,
+                "image" => $fileName,
+                'transaction_id' => $transaction->id,
+            ]);
+
+            DB::commit();
+
+            return response()->json(['message' => 'تم ارسال طلبكم بنجاح!']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Something went wrong.'], 500);
+        }
+
     }
 
 
