@@ -301,3 +301,253 @@ a3: make ajax call for form with error handled at ajax for each input :
 
 
 *******************************************************************************************************************************************************************************************
+a4: filter with date and time with ajax :
+-------------------------------------------------------------------
+
+
+  <form class="my-5 p-3 border border-3">
+                        @csrf
+
+                        <div class="row p-2">
+                            <div class="form-group col-md-4">
+                                <label>من</label>
+                                <input name="from" type="date" class="form-control" id="start_date"
+                                     name="start_date"/>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>إلى</label>
+                                <input name="to" type="date" class="form-control" id="end_date"
+                                     />
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>من الساعة </label>
+                                <input type="time" class="form-control" id="start_time" name="start_time" >
+                            </div>
+
+                            <div class="form-group col-md-4">
+                                <label>الى الساعة </label>
+                                <input type="time" class="form-control" id="end_time" name="end_time" >
+                            </div>
+
+                            <div class="form-group text-center m-auto">
+                                <button id="filterpayments" class="btn ripple btn-primary btn-bloc">بحث</button>
+                            </div>
+                        </div>
+                    </form>
+
+
+
+            $('#filterpayments').on('click', function(e) {
+                e.preventDefault();
+                $(this).prop('disabled', true);
+
+                var startDate = $('#start_date').val();
+                var endDate = $('#end_date').val();
+                var start_time = $('#start_time').val();
+                var end_time = $('#end_time').val();
+                // // $('#end_date').removeClass('is-invalid');
+                // // $('#end_time').removeClass('is-invalid');
+                // $('input[class="alert-danger"]').remove();
+
+                var i=1;
+                var j=1;
+
+                // Make an AJAX request to the server
+                $.ajax({
+                    url: '/dashboard/filterpayments', // Replace with the actual URL to your server-side route
+                    method: 'POST',
+                    data: {
+                        start_date: startDate,
+                        end_date: endDate,
+                        start_time:start_time,
+                        end_time:end_time,
+
+                        _token: $('meta[name="csrf-token"]').attr('content') // Add the CSRF token
+
+                    },
+
+                    success: function(response) {
+                        //console.log(response);
+                        $('#start_date').attr('type','text').val('').attr('type','date');
+                        $('#end_date').attr('type','text').val('').attr('type','date');
+                        $('#start_time').attr('type','text').val('').attr('type','time');
+                        $('#end_time').attr('type','text').val('').attr('type','time');
+
+                        var table = $('#example').DataTable();
+                        var table2 = $('#example2').DataTable();
+                        table.clear();
+                        table2.clear();
+
+                        response.finished.forEach(function(finish) {
+                            var row = `<tr class="finished${finish.id}">
+                                <td> ${i++} </td>
+                                <td>${finish.client.name}</td>
+                                <td>${finish.client.phone}</td>
+                                <td>${finish.package.name}</td>
+                                <td>${finish.value}</td>
+                                <td>${finish.user.name}</td>
+                                <td>
+                                    <a title="دفع" class="editfinished btn btn-sm ripple btn-primary"
+                                        data-target="#editmodal" data-toggle="modal"
+                                        data-finished_id="${finish.id}"
+                                        data-client_id="${finish.client.id}"
+                                        data-client_name="${finish.package.name}"
+                                        data-client_package="${finish.package.name}"
+                                        data-package_id="${finish.package.id}"
+                                        data-client_package_price="${finish.package.price}"
+                                        href="">
+                                        <span class="fa fa-edit"></span>
+                                    </a>
+                                </td>
+                            </tr>`;
+                            table.row.add($(row));
+
+                        });
+
+
+                        response.notfinished.forEach(function(notfinish) {
+                            var row2 = `<tr class="notfinished${notfinish.id}">
+                                <td> ${j++} </td>
+                                <td>${notfinish.client.name}</td>
+                                <td>${notfinish.client.phone}</td>
+                                <td>${notfinish.package.name}</td>
+                                <td>${notfinish.value}</td>
+                                <td>${notfinish.user.name}</td>
+                                <td>
+                                    <a title="دفع" class="editnotfinished btn btn-sm ripple btn-primary"
+                                        data-target="#editmodal" data-toggle="modal"
+                                        data-notfinished_id="${notfinish.id}"
+                                        data-client_id="${notfinish.client.id}"
+                                        data-client_name="${notfinish.package.name}"
+                                        data-client_package="${notfinish.package.name}"
+                                        data-package_id="${notfinish.package.id}"
+                                        data-client_package_price="${notfinish.package.price}"
+                                        data-client_remainvalue="${notfinish.client.remain_value}"
+                                        href="">
+                                        <span class="fa fa-edit"></span>
+                                    </a>
+                                </td>
+                            </tr>`;
+                            table2.row.add($(row2));
+
+                        });
+
+
+                        table.draw();
+                        table2.draw();
+
+                    },
+                    error: function(xhr, status, error) {
+                        // Handle the error response
+                        if (xhr.status === 422) {
+                            // Handle validation errors
+                            var errors = xhr.responseJSON.error;
+                            $.each(errors, function(key, value) {
+                                var inputElement = $('[name="' + key + '"]');
+                                inputElement.addClass('is-invalid');
+                                inputElement.parent().append('<div class="alert alert-danger">' + value + '</div>');
+                            });
+                        } else {
+                            // Handle other errors
+                            var errorMessage = xhr.responseJSON.message || 'Something went wrong.';
+                            alert('Error: ' + errorMessage);
+                        }
+                    },
+                    complete: function() {
+                            // Enable the button after the request is complete
+                            $('#filterpayments').prop('disabled', false);
+
+                        }
+                });
+            });
+
+   public function filterpayment(Request $request){
+        //return $request;
+        $end_Date = Carbon::createFromFormat('Y-m-d', $request->input('end_date'))->addDay()->format('Y-m-d');
+        $finishedPayment= FinishedPayment::with('client','user','package')
+        ->whereBetween('created_at', [ request('start_date'), $end_Date ])
+        ->whereRaw("TIME_FORMAT(created_at, '%H:%i') BETWEEN ? AND ?", [$request->input('start_time'), $request->input('end_time')])
+        ->orderByDesc('id')->get();
+
+
+        $notfinishedPayment= Payment::with('client','user','package')
+        ->whereBetween('created_at', [ request('start_date'), $end_Date ])
+        ->whereRaw("TIME_FORMAT(created_at, '%H:%i') BETWEEN ? AND ?", [$request->input('start_time'), $request->input('end_time')])
+        ->orderByDesc('id')->get();
+
+
+
+
+        foreach ($notfinishedPayment as $payment) {
+            $client = $payment->client;
+            $packagePrice = $client->packages->price;
+            $totalPaid = $client->payment->sum('value');
+            $client->remain_value = $packagePrice - $totalPaid;
+        }
+
+        return response()->json([
+            'code' => 200,
+            'notfinished' => $notfinishedPayment,
+            'finished' => $finishedPayment,
+        ]);
+
+    }
+
+
+
+
+
+*******************************************************************************************************************************************************************************************
+a5: multiple select2 :
+-------------------------------------------------------------------
+    <!--- Internal Select2 css-->
+    <link href="{{ URL::asset('assets/plugins/select2/css/select2.min.css') }}" rel="stylesheet">
+            
+                            <select name="subject_id[]" multiple="multiple" class="select2" required>
+                                <option value="" selected disabled> اختر المادة  </option>
+                                @foreach ($subjects as $subject)
+                                    <option name="{{ $subject->id }}" value="{{ $subject->id }}"> {{ $subject->name }}</option>
+                                @endforeach 
+                            </select>
+    <script src="{{ URL::asset('assets/plugins/select2/js/select2.min.js') }}"></script>
+
+    <script src="{{ URL::asset('assets/js/select2.js') }}"></script>
+
+
+*******************************************************************************************************************************************************************************************
+a6: deal with many to many :
+-------------------------------------------------------------------
+$authTeacher  = Auth::guard('teacher')->user();
+
+
+to get             $courses=$authTeacher->courses()->get();
+
+
+ to add            $courses->teachers()->attach($teacherId);
+
+class Teacher extends Authenticatable
+{
+    protected $fillable = [
+        'name_title',
+        'first_name',
+    ];
+
+    public function courses()
+    {
+        return $this->belongsToMany(Course::class, 'course_teacher');
+    }
+}
+
+class Course extends Model
+{
+    protected $fillable = [
+        'name',
+        'image',
+    ];
+    public function teachers()
+    {
+        return $this->belongsToMany(Teacher::class, 'course_teacher');
+    }
+}
+
+*******************************************************************************************************************************************************************************************
