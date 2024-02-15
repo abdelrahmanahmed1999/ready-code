@@ -1,3 +1,14 @@
+topic:
+------
+a1: search filter and when it clicked on any search redirect to page
+a2: to upload or drag&drop image in lararvel
+a3: make ajax call for form with error handled at ajax for each input 
+a4: filter with date and time with ajax  
+a5: multiple select2 
+a6: deal with many to many  
+a7: validator
+
+
 a1: search filter and when it clicked on any search redirect to page:
 -----------------------------------------------------------------
 
@@ -509,6 +520,13 @@ a5: multiple select2 :
                                     <option name="{{ $subject->id }}" value="{{ $subject->id }}"> {{ $subject->name }}</option>
                                 @endforeach 
                             </select>
+                            الفرق انه مش هيخلى فى multiple بس هيعملك search
+                            <select name="subject_id" class="select2" required>
+                                <option value="" selected disabled> اختر المادة  </option>
+                                @foreach ($subjects as $subject)
+                                    <option name="{{ $subject->id }}" value="{{ $subject->id }}"> {{ $subject->name }}</option>
+                                @endforeach 
+                            </select>
     <script src="{{ URL::asset('assets/plugins/select2/js/select2.min.js') }}"></script>
 
     <script src="{{ URL::asset('assets/js/select2.js') }}"></script>
@@ -549,5 +567,33 @@ class Course extends Model
         return $this->belongsToMany(Teacher::class, 'course_teacher');
     }
 }
+
+*******************************************************************************************************************************************************************************************
+
+
+a7: validator :
+-------------------------------------------------------------------
+
+        $messages = [
+            'name.required' => 'من فضلك أدخل اسم الكورس',
+        ];
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|max:255|unique:courses,name,' . $request->id,
+            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:1024',
+
+        ], $messages);
+
+        $validator = Validator::make($request->all(), [
+            'code' => 'required|numeric|min:15',
+        ]);
+
+        if ($validator->fails()) {
+        return response()->json(['error' => $validator->errors()], 422);
+        }
+     if(!$coupon){
+                $validator->errors()->add('code', 'لايوجد كود بهذا الرقم!'); // Add custom error message
+                return response()->json(['error' => $validator->errors()], 422);
+            }
 
 *******************************************************************************************************************************************************************************************
