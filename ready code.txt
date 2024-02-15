@@ -237,7 +237,10 @@ a3: make ajax call for form with error handled at ajax for each input :
                         .css('display', 'block')
                         .html(response.message);
                         $('#transferCashForm')[0].reset();
-
+                        
+                        $('#example tbody tr').each(function(index) {
+                            $(this).find('td:first').text(index + 1); // Add 2 to start from 2
+                        });
                 },
                 error: function(xhr, status, error) {
                     // Handle the error response
