@@ -7,7 +7,8 @@ a4: filter with date and time with ajax
 a5: multiple select2 
 a6: deal with many to many  
 a7: validator
-
+a8: model things 
+a9: migrations:
 
 a1: search filter and when it clicked on any search redirect to page:
 -----------------------------------------------------------------
@@ -236,11 +237,14 @@ a3: make ajax call for form with error handled at ajax for each input :
                     $('#message')
                         .css('display', 'block')
                         .html(response.message);
-                        $('#transferCashForm')[0].reset();
-                        
-                        $('#example tbody tr').each(function(index) {
-                            $(this).find('td:first').text(index + 1); // Add 2 to start from 2
-                        });
+                    $('#transferCashForm')[0].reset();
+                    setTimeout(() => {
+                        $('#message').hide();
+                    }, 2000);
+                    //da law 3ndk datatable w 3ayz t3eed tarteeb 
+                    $('#example tbody tr').each(function(index) {
+                        $(this).find('td:first').text(index + 1); // Add 2 to start from 2
+                    });
                 },
                 error: function(xhr, status, error) {
                     // Handle the error response
@@ -545,6 +549,7 @@ to get             $courses=$authTeacher->courses()->get();
 
 
  to add            $courses->teachers()->attach($teacherId);
+                     $courses->teachers()->sync($teacherId); deh mash btdeef l metkrr
 
 class Teacher extends Authenticatable
 {
@@ -569,11 +574,37 @@ class Course extends Model
     {
         return $this->belongsToMany(Teacher::class, 'course_teacher');
     }
+
+
+//deh law 3ayz terga3 column mn table l many to many
+    public function students()
+    {
+        return $this->belongsToMany(Student::class, 'course_student') ->withPivot(['created_at', 'rel_type', 'price']);
+    }
 }
 
+//deh law 3ayz to add values l columns fy many-to many
+        $course=Course::find($request->course_id);
+
+     $course->students()->attach($students_ids,[
+
+                'created_at' => Carbon::now('UTC')->addHour(2)->toDateTimeString(),
+                'rel_type' => 3,
+                'price' => $course->cost,
+
+           ]);
+
+// taree2a l attach ht5zn fy table w htkrr l mawgood anma sync btshoof l awel mwgood law mawgood mash htdefoh tany
+            $course->students()->sync($students_ids);
+            $pivotData = [
+                'course_student.created_at' => Carbon::now('UTC')->addHour(2)->toDateTimeString(),
+                'course_student.rel_type' => 3,
+                'course_student.price' => $course->cost,
+            ];
+            $course->students()->wherePivotIn('student_id', $students_ids)->update($pivotData);
+      
+
 *******************************************************************************************************************************************************************************************
-
-
 a7: validator :
 -------------------------------------------------------------------
 
@@ -588,15 +619,81 @@ a7: validator :
         ], $messages);
 
         $validator = Validator::make($request->all(), [
-            'code' => 'required|numeric|min:15',
+           'code' => 'required|numeric|min:15',
         ]);
 
         if ($validator->fails()) {
         return response()->json(['error' => $validator->errors()], 422);
-        }
-     if(!$coupon){
+        } 
+        if(!$coupon){
                 $validator->errors()->add('code', 'لايوجد كود بهذا الرقم!'); // Add custom error message
                 return response()->json(['error' => $validator->errors()], 422);
-            }
+        }
+
+*******************************************************************************************************************************************************************************************
+
+a8: model things :
+-------------------------------------------------------------------
+
+    protected $fillable = [
+        'teacher_id ',
+        'shift',
+        'type',
+        'day_id ',
+        'duration',
+    ];
+    protected $table="students_live_reservations";
+
+deh ma3 kol teacher bygeboh hyb2a feh FullNameAttribute bas mash httba2a mawgooda fl objects la2 htest5dmha 3ltool asmha $teacher->fullName
+class Teacher extends Authenticatable
+{
+    public function getFullNameAttribute()
+    {
+        return $this->first_name . ' '. $this->last_name;
+    }
+    
+    public function getShiftAttribute($value)
+    {
+        return $value == '0' ? 'مسائى' : 'صباحى';
+    }
+
+      public function setShiftAttribute($value)
+    {
+        $this->attributes['shift'] = ($value == '0') ? 'مسائى' : 'صباحى';
+    }
+
+     public function student()
+    {
+        return $this->belongsTo(Student::class);
+    }
+
+
+    public function studentslivereservation()
+    {
+        return $this->hasMany(StudentsLiveReservation::class);
+    }
+}
+
+
+*******************************************************************************************************************************************************************************************:
+a9: migrations:
+-------------------------------------------------------------------
+php artisan make:migration create_students_live_reservations_table --create=students_live_reservations
+php artisan make:migration create_students_live_reservations_table
+php artisan make:migratie:refresh,rollback,fresh
+
+            $table->id();
+            $table->enum('status', ['pending', 'rejected', 'confirmed'])->default('pending');
+            $table->string('image')->nullable();
+            $table->unsignedBigInteger('transaction_id');
+            $table->foreign('transaction_id')->references('id')->on('transactions')->onDelete('cascade')->onUpdate('cascade');
+            $table->integer('hours_price')->nullable();
+
+            $table->timestamps();
+
+
+            $table->dropColumn('hours_price');
+            Schema::dropIfExists('students_live_reservations');
+
 
 *******************************************************************************************************************************************************************************************
