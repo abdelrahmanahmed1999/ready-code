@@ -1,14 +1,27 @@
 topic:
 ------
-a1: search filter and when it clicked on any search redirect to page
-a2: to upload or drag&drop image in lararvel
-a3: make ajax call for form with error handled at ajax for each input 
-a4: filter with date and time with ajax  
-a5: multiple select2 
-a6: deal with many to many  
-a7: validator
-a8: model things 
+a1: search filter and when it clicked on any search redirect to page:
+a2: to upload or drag&drop image in lararvel:
+a3: make ajax call for form with error handled at ajax for each input: 
+a4: filter with date and time with ajax:
+a5: multiple select2:
+a6: deal with many to many:
+a7: validator:
+a8: model things :
 a9: migrations:
+a10: some functions:
+a11: some git commands:
+a12: some code:
+a13: to make dashboard with specific login and guard and middleware:
+a14: some  links:
+a15: owel carousel:
+
+
+
+
+
+
+
 
 a1: search filter and when it clicked on any search redirect to page:
 -----------------------------------------------------------------
@@ -129,12 +142,6 @@ a2: to upload or drag&drop image in lararvel:
     <link href="{{ URL::asset('assets/plugins/fileuploads/css/fileupload.css') }}" rel="stylesheet" type="text/css" />
     <!---Internal Fancy uploader css-->
     <link href="{{ URL::asset('assets/plugins/fancyuploder/fancy_fileupload.css') }}" rel="stylesheet" />
-<!--- Internal Select2 css-->
-<link href="{{URL::asset('assets/plugins/select2/css/select2.min.css')}}" rel="stylesheet">
-<!---Internal Fileupload css-->
-<link href="{{URL::asset('assets/plugins/fileuploads/css/fileupload.css')}}" rel="stylesheet" type="text/css"/>
-<!---Internal Fancy uploader css-->
-<link href="{{URL::asset('assets/plugins/fancyuploder/fancy_fileupload.css')}}" rel="stylesheet" />
 @endsection
 
 <input name="image"  type="file" class="dropify" data-default-file="{{ URL::asset('assets/img/photos/1.jpg') }}" data-height="108" />
@@ -245,6 +252,9 @@ a3: make ajax call for form with error handled at ajax for each input :
                     $('#example tbody tr').each(function(index) {
                         $(this).find('td:first').text(index + 1); // Add 2 to start from 2
                     });
+                    //deh law 3ayz te3mel reload l table
+                    $('#example').load(location.href+ " #example");
+
                 },
                 error: function(xhr, status, error) {
                     // Handle the error response
@@ -604,9 +614,19 @@ class Course extends Model
             $course->students()->wherePivotIn('student_id', $students_ids)->update($pivotData);
       
 
+      //hena law 3andk gdwal w leh 3leaka b gdwel many to many w anta 3ayz te3mel l where mn gdwel many to many 
+        $studentId = Auth::guard('student')->user()->id;
+        $liveMeetings = LiveMeeting::whereHas('students_meetings', function ($query) use ($studentId) {
+            $query->where('student_id', $studentId);
+        })->with('teacher')->get();
+
+
+
+
 *******************************************************************************************************************************************************************************************
 a7: validator :
 -------------------------------------------------------------------
+use Illuminate\Support\Facades\Validator;
 
         $messages = [
             'name.required' => 'من فضلك أدخل اسم الكورس',
@@ -688,6 +708,7 @@ php artisan make:migratie:refresh,rollback,fresh
             $table->unsignedBigInteger('transaction_id');
             $table->foreign('transaction_id')->references('id')->on('transactions')->onDelete('cascade')->onUpdate('cascade');
             $table->integer('hours_price')->nullable();
+            $table->foreignId('teacher_id')->constrained('teachers')->cascadeOnDelete()->cascadeOnUpdate();
 
             $table->timestamps();
 
@@ -697,3 +718,156 @@ php artisan make:migratie:refresh,rollback,fresh
 
 
 *******************************************************************************************************************************************************************************************
+
+a10: some functions:
+-------------------------------------------------------------------
+
+        //hena law 3andk texatarea w feh arkam kteera w mafsool benhom b @ fa btgeeb id bta3 alarkam dool
+        $studentsNumbers = $request->input('students_numbers');
+        $students_phones = array_filter(explode('@', $studentsNumbers));
+        $students=Student::whereIn('phone',$students_phones)->get();
+        $students_ids=$students->pluck('id');
+
+        //hena law 3ayz tgeeb arkam mn gdwel w t7thom mafsoleeen bl @
+        var phones = [];
+        $('#example tbody tr').each(function() {
+            var phone = $(this).find('td:nth-child(3)').text().trim();
+            if (phone && phones.indexOf(phone) === -1) {
+                phones.push(phone);
+            }
+        });
+        $('#studentPhones').val(phones.join('@'));
+
+
+//deh law matkrrsh code mo3eyn bl text
+
+var points = [
+            "جلسات تحديد المسار في 'العمل – الحياة'.",
+            "جلسات إتخاذ قرار صعب في الحياة.",
+            "جلسات التعافي من فقدان الشغف والطاقة والمعني من حياتي",
+            "جلسات فن إختيار الشريك",
+        ];
+
+        // Loop through each point and create HTML elements
+        points.forEach(function(point) {
+            var $col = $('<div class="col-md-3">');
+            var $Box = $('<div class="box">');
+            var $detailBox = $('<div class="detail-box">');
+
+            var $p = $('<p>').text(point);
+
+            $detailBox.append($p);
+            $Box.append($detailBox);
+            $col.append($Box);
+
+            // Append the box to the container div
+            $('#container').append($col);
+        });
+
+
+
+
+
+
+
+*******************************************************************************************************************************************************************************************
+
+a11: some git commands:
+-------------------------------------------------------------------
+
+    // deh law 3ayz tgeeb branch mn remote l repo asm branch 3la repo : l asm l ant 3ayzoh 3ndk fel local
+    git fetch origin drshereen:drshereen
+
+
+
+
+
+*******************************************************************************************************************************************************************************************
+
+a12: some code:
+-------------------------------------------------------------------
+
+
+        //deh l sora met5zna fl public/images/teachers
+        <img class="w-100 img-responsive img-thumbnail" src="{{asset('images/teachers/asset('images/teachers/' .$livemeeting->teacher->image)}}">
+
+*******************************************************************************************************************************************************************************************
+
+a13: to make dashboard with specific login and guard and middleware:
+-------------------------------------------------------------------
+
+1st make model extends Authenticatable
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+
+class Center extends Authenticatable
+{
+    protected $fillable = [
+        'name', 'address', 'image', 'phone', 'whatsapp', 'map_link', 'note','password'
+    ];
+}
+
+
+*******************************************************************************************************************************************************************************************
+
+a14: some  links:
+-------------------------------------------------------------------
+
+css styles;
+
+https://cssgradient.io/
+
+
+
+*******************************************************************************************************************************************************************************************
+
+a15: owel carousel:
+-------------------------------------------------------------------
+
+
+    <link href="{{ URL::asset('owl.carousel.css') }}" rel="stylesheet">
+    <script src="{{ URL::asset('owl.carousel.js') }}"></script>
+<div class="owl-carousel owl-theme main-teachers">
+                @foreach ($teachers as $teacher)
+                    <div class="text-center m-3">
+                        <div class="hover-team" data-aos="slide-left" data-aos-duration="1000">
+                            <div class="our-team"><a
+                                    href="{{ route('getteacher', ['slug' => $teacher->first_name . '-' . $teacher->last_name]) }}">
+                                    <img src="{{ asset('images/teachers/' . $teacher->image) }}" class="w-100"
+                                        style="height: 250px" alt="" />
+                                    <div class="team-content">
+
+                                        <h3 class="title">{{ $teacher->name_title }} :
+                                            {{ $teacher->first_name . ' ' . $teacher->last_name }} </h3>
+
+                                        <span class="post">{{ $teacher->student_classes[0]->grade->name }} </span>
+                                    </div>
+                                </a>
+                                <ul class="social">
+                                    <li>
+                                        <a href="{{ $setting->facebook }}"><i class="fab fa-facebook"></i></a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ $teacher->insta_link }}"><i class="fab fa-instagram"></i></a>
+                                    </li>
+                                    <li>
+                                        <a href="https://wa.me/+2{{ $setting->whatsapp }}"><i
+                                                class="fab fa-whatsapp"></i></a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ $setting->youtube }}"><i class="fab fa-youtube"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="icon"> <i class="fa fa-user" aria-hidden="true"></i> </div>
+                            </div>
+                            <div class="team-description">
+                                <p>{{ $teacher->description }}</p>
+                            </div>
+                            <hr class="my-0">
+                        </div>
+                    </div>
+                @endforeach
+            </div>
