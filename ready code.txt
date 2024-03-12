@@ -15,7 +15,8 @@ a12: some code:
 a13: to make dashboard with specific login and guard and middleware:
 a14: some  links:
 a15: owel carousel:
-
+a16: turn off inpsect dev tools and page source and right click:
+a17: multilanguage [spatie,mcammara]:
 
 
 
@@ -604,7 +605,7 @@ class Course extends Model
 
            ]);
 
-// taree2a l attach ht5zn fy table w htkrr l mawgood anma sync btshoof l awel mwgood law mawgood mash htdefoh tany
+// taree2a l attach ht5zn fy table w htkrr l mawgood anma sync btmsa7 kol records l lehom 3lka bl course w ba3d keda btdeef l gdooadad
             $course->students()->sync($students_ids);
             $pivotData = [
                 'course_student.created_at' => Carbon::now('UTC')->addHour(2)->toDateTimeString(),
@@ -621,6 +622,9 @@ class Course extends Model
         })->with('teacher')->get();
 
 
+        //hena law 3ayz temsa7 kol coursat bta3at student 
+        $student->courses()->detach($coursesIds);
+
 
 
 *******************************************************************************************************************************************************************************************
@@ -633,8 +637,8 @@ use Illuminate\Support\Facades\Validator;
         ];
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|max:255|unique:courses,name,' . $request->id,
-            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:1024',
+            'name' => 'required|min:255|unique:courses,name,' . $request->id,
+            'image' => 'nullable|image|mimes:jpg,png,jpeg,pdf|max:1024',
 
         ], $messages);
 
@@ -790,6 +794,22 @@ a12: some code:
 
         //deh l sora met5zna fl public/images/teachers
         <img class="w-100 img-responsive img-thumbnail" src="{{asset('images/teachers/asset('images/teachers/' .$livemeeting->teacher->image)}}">
+        l path 3lshan tet check 3leh bykonn keda
+        http://localhost:8000/images/courses/lectures/41-03Screenshot%20(1).png
+
+                    //hena law 3ayz tb3t resala fl whats abl ma yeft7a
+                      @php
+                        $br = '%0a';
+                        $message = " الابن *( $student->first_name $student->last_name )*  في منصة *( $setting->name )و لمتابعة مستوي ابنك يمكنك التسجيل من اللوحة الخاصة بولي الأمر ";
+                    @endphp
+
+                    <a class="text-primary" style="text-decoration: underline"
+                            href="https://api.whatsapp.com/send?phone=+2{{  $student->parent_phone  }}&text={{ $message . route('login.parent') }}"
+                            target="_blank">
+                            {{ $student->parent_phone }}
+                    </a>
+
+
 
 *******************************************************************************************************************************************************************************************
 
@@ -871,3 +891,114 @@ a15: owel carousel:
                     </div>
                 @endforeach
             </div>
+
+
+
+
+*******************************************************************************************************************************************************************************************
+
+a16: turn off inpsect dev tools and page source and right click:
+-------------------------------------------------------------------
+
+             document.onkeydown = function(e) {
+
+
+            if (e.keyCode == 123) {
+                return false;
+            }
+
+
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 73) {
+                return false;
+            }
+
+
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 74) {
+                return false;
+            }
+
+
+            if (e.ctrlKey && e.keyCode == 85) {
+                return false;
+            }
+        }
+
+
+        //check if dev tools is opened
+        function isDevToolsOpened() {
+            const threshold = 160;
+            let devToolsWidth = window.outerWidth - window.innerWidth > threshold;
+            let devToolsHeight = window.outerHeight - window.innerHeight > threshold;
+            return devToolsWidth || devToolsHeight;
+        }
+
+        // Check if DevTools are open
+        if (isDevToolsOpened()) {
+            $('#pills-tabContent').remove();
+        }
+
+
+*******************************************************************************************************************************************************************************************
+
+a17: multilanguage [spatie,mcammara]:
+-------------------------------------------------------------------
+
+
+mcammara:
+
+         1-composer require mcamara/laravel-localization  //dah hynazel package mcamara fl vendor
+         2-php artisan vendor:publish --provider="Mcamara\LaravelLocalization\LaravelLocalizationServiceProvider"  //dah hyd5ol gwa mlf mcamara l fy vendor ygeeb ml laravellocalization y7toh fl config
+         3-'localize'                => \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRoutes::class,
+          'localizationRedirect'    => \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter::class,
+           'localeSessionRedirect'   => \Mcamara\LaravelLocalization\Middleware\LocaleSessionRedirect::class,
+            'localeCookieRedirect'    => \Mcamara\LaravelLocalization\Middleware\LocaleCookieRedirect::class,
+           'localeViewPath'          => \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath::class
+           //dool ht7tohom fe mlf kernel 3nd protected $routeMiddleware
+         4-fe laravellocalization a5ly     'useAcceptLanguageHeader' => false, //bl8y default bta3toh l hwa masbtaha english [en]  w b5leh yshoop app.locale ma3molah eh
+        5- config/laravellocalization asheel comment mn l 'ar' | 'en' aw ay lo8a 3ayzha
+        6-Route::group([
+                'prefix' => LaravelLocalization::setLocale(),
+                'middleware' => ['localeSessionRedirect', 'localizationRedirect', 'localeViewPath']
+            ], function () {
+                Routes
+            });
+
+        7- //deh hygblk lo8at l mawka3 l anta shelt mnhom l comment fy config/laravellocalization w ht8erlk lo8a mn locale law dost 3la haga menhom
+         law ma7tagha
+            @foreach(LaravelLocalization::getSupportedLocales() as $localCode => $properties)
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{{ LaravelLocalization::getLocalizedURL($localCode, null, [], true) }}"
+                        onclick=" setLocale('{{ $localCode }}');">
+                            {{ $properties['native'] }}
+                        </a>
+                    </li>
+                @endforeach
+
+                w deh code fl helpers
+                
+                if (!function_exists('setLocale')) {
+                    function setLocale($locale)
+                    {
+                        \Illuminate\Support\Facades\App::setLocale($locale);
+                        return redirect()->back();
+                    }
+                }
+
+        8- controller validation
+
+            return $message=[
+                'name.required' =>__('message.offer name required') || trans('message.offer name required')
+            ]
+
+            fl message.json ba2a ht3mel w nfs kalam l ar
+                "offer name required" => "offer name required"
+
+        9- bt3mel resources/lang/ar/filename.php && resources/lang/en/filename.php   nfs l asm filename
+
+        return [
+            'key' => 'value',
+        ]
+
+        10-  
+            LaravelLocalization::getCurrentLocale  || App::getLocale()  btgeeb l lang mn config/app locale
+            App::setLocale('ar')   bt8yer locale
